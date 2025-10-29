@@ -169,6 +169,12 @@ static int priv_driver_iso_detect(struct GLUE_INFO *prGlueInfo,
 				signed char *argv[]);
 #endif
 
+/* pri: add by likang for wifi dynamic adjustment power priority logic begin */
+#if CFG_SUPPORT_DYNAMIC_PWR_LIMIT
+extern uint8_t last_scenario;
+#endif
+/* pri: add by likang for wifi dynamic adjustment power priority logic end */
+
 /*******************************************************************************
  *                       P R I V A T E   D A T A
  *******************************************************************************
@@ -21494,6 +21500,14 @@ int priv_driver_set_power_control(struct net_device *prNetDev,
 		       name, fgIndex);
 		return -1;
 	}
+
+	/*pri: add by likang for Add wifi dynamic adjustment power priority logic begin */
+	if (last_scenario > 2) {
+		DBGLOG(REQ, INFO, "last report scenario is %d, index =[%u]",
+		       last_scenario, index);
+		return 0;
+	}
+	/*pri: add by likang for Add wifi dynamic adjustment power priority logic end */
 
 	rPwrCtrlParam.fgApplied = (index == 0) ? FALSE : TRUE;
 	rPwrCtrlParam.name = name;

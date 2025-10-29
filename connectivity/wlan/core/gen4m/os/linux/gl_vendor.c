@@ -307,6 +307,12 @@ const struct nla_policy nla_get_csi_policy[
 };
 #endif
 
+/* pri: add by likang for wifi dynamic adjustment power priority logic begin */
+#if CFG_SUPPORT_DYNAMIC_PWR_LIMIT
+uint8_t last_scenario;
+#endif
+/* pri: add by likang for wifi dynamic adjustment power priority logic end */
+
 /*******************************************************************************
  *                           P R I V A T E   D A T A
  *******************************************************************************
@@ -2792,6 +2798,9 @@ int mtk_cfg80211_vendor_set_tx_power_scenario(struct wiphy *wiphy,
 	uint32_t rStatus = WLAN_STATUS_SUCCESS;
 	uint32_t u4SetInfoLen = 0;
 	uint8_t index = 0;
+	/*pri: add by likang for wifi dynamic adjustment power priority logic begin */
+	uint8_t wdevIftype = 0;
+	/*pri: add by likang for wifi dynamic adjustment power priority logic end */
 	char name[] = { "_G_Scenario" };
 
 	ASSERT(wiphy);
@@ -2824,6 +2833,15 @@ int mtk_cfg80211_vendor_set_tx_power_scenario(struct wiphy *wiphy,
 		return -EINVAL;
 	}
 
+	/*pri: add by likang for wifi dynamic adjustment power priority logic begin */
+	wdevIftype = wdev->iftype;
+	DBGLOG(REQ, INFO,"pre wlanoidTxPowerControl wdevIftype=[%d]\n",wdevIftype);
+	if ((wdevIftype == 3) && (index == 3)) {
+		DBGLOG(REQ, ERROR, "receiver on in NL80211_IFTYPE_AP, invalid scenario");
+		return -EINVAL;
+	}
+	/*pri: add by likang for wifi dynamic adjustment power priority logic end */
+
 	rPwrCtrlParam.fgApplied = (index == 0) ? FALSE : TRUE;
 	rPwrCtrlParam.name = name;
 	rPwrCtrlParam.index = index;
@@ -2854,6 +2872,13 @@ int mtk_cfg80211_vendor_set_tx_power_scenario(struct wiphy *wiphy,
 	}
 
 	DBGLOG(REQ, INFO, "rStatus=0x%x\n", rStatus);
+
+	/*pri: add by likang for wifi dynamic adjustment power priority logic begin */
+	if (rStatus == WLAN_STATUS_SUCCESS){
+		last_scenario = index;
+		DBGLOG(REQ, INFO,"last_scenario=[%d]\n",last_scenario);
+	}
+	/*pri: add by likang for wifi dynamic adjustment power priority logic end */
 
 	return cfg80211_vendor_cmd_reply(skb);
 
